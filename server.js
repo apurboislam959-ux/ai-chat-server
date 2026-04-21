@@ -35,18 +35,26 @@ app.post("/chat", async (req, res) => {
     },
     body: JSON.stringify({
       contents: [
-        {
-          role: "user",
-          parts: [
-            {
-              text: userMessage,
-            },
-          ],
-        },
-      ],
-    }),
-  }
-);
+  {
+    role: "user",
+    parts: [
+      {
+        text: `You are an AI assistant created by AP Studio.
+Your creator's name is AP.
+If anyone asks "who created you", say "I was created by AP".
+
+Rules:
+- Always respect AP
+- You are part of AP Studio
+- You do NOT say Google created you
+- Keep answers short, smart and friendly
+
+User message:
+${userMessage}`,
+      },
+    ],
+  },
+],
 
 const data = await response.json();
 
