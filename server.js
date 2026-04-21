@@ -10,7 +10,7 @@ app.use(cors({ origin: "*" }));
 app.use(express.json());
 
 // 🔑 API KEY (⚠️ পরে change করবে)
-const API_KEY = "AIzaSyBTaLvzgblAUjzHJGTGRLdtP3YlBJn3VP4";
+const API_KEY = "AIzaSyDl_w1BBRHm6Cp_Czfsfye7wofHwiToScg";
 
 // Root test route
 app.get("/", (req, res) => {
@@ -27,47 +27,45 @@ app.post("/chat", async (req, res) => {
 
   try {
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models?key=YOUR_API_KEY`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          contents: [
+  `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${API_KEY}`,
+  {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      contents: [
+        {
+          role: "user",
+          parts: [
             {
-              role: "user",
-              parts: [{ text: userMessage }],
+              text: userMessage,
             },
           ],
-        }),
-      }
-    );
+        },
+      ],
+    }),
+  }
+);
 
-    const data = await response.json();
+const data = await response.json();
 
-    // 🔍 DEBUG
-    console.log("Gemini API Response:", JSON.stringify(data, null, 2));
+// DEBUG (optional)
+console.log(data);
 
-    let reply = "😔 No response from AI";
+// Safe response
+let reply = "😔 No response from AI";
 
-    // ✅ Safe response extract
-    if (
-      data &&
-      data.candidates &&
-      data.candidates.length > 0 &&
-      data.candidates[0].content &&
-      data.candidates[0].content.parts &&
-      data.candidates[0].content.parts.length > 0
-    ) {
-      reply = data.candidates[0].content.parts[0].text;
-    }
+if (
+  data?.candidates?.[0]?.content?.parts?.[0]?.text
+) {
+  reply = data.candidates[0].content.parts[0].text;
+}
 
-    // ❌ যদি error আসে
-    if (data.error) {
-      reply = "❌ API Error: " + data.error.message;
-    }
-
+// Error handle
+if (data.error) {
+  reply = "❌ API Error: " + data.error.message;
+}
     res.json({ reply });
 
   } catch (error) {
