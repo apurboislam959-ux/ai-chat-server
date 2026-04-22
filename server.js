@@ -10,7 +10,7 @@ app.use(cors({ origin: "*" }));
 app.use(express.json());
 
 // 🔑 API KEY (⚠️ পরে change করবে)
-const API_KEY = "AIzaSyDl_w1BBRHm6Cp_Czfsfye7wofHwiToScg";
+const API_KEY = process.env.API_KEY;
 
 // Root test route
 app.get("/", (req, res) => {
