@@ -1,88 +1,56 @@
 import express from "express";
 import cors from "cors";
-import fetch from "node-fetch";
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Middleware
-app.use(cors({ origin: "*" }));
+app.use(cors());
 app.use(express.json());
 
-// 🔑 API KEY (⚠️ পরে change করবে)
-const API_KEY = process.env.API_KEY;
+// 🔐 OpenAI API key
+const API_KEY = process.env.OPENAI_API_KEY;
 
-// Root test route
-app.get("/", (req, res) => {
-  res.send("Server running ✅");
-});
-
-// Chat route
 app.post("/chat", async (req, res) => {
   const userMessage = req.body.message;
 
-  if (!userMessage) {
-    return res.json({ reply: "❌ No message sent" });
-  }
-
   try {
-    const response = await fetch(
-  `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${API_KEY}`,
-  {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      contents: [
-  {
-    role: "user",
-    parts: [
-      {
-        text: `You are an AI assistant created by AP Studio.
-Your creator's name is AP.
-If anyone asks "who created you", say "I was created by AP".
-
-Rules:
-- Always respect AP
-- You are part of AP Studio
-- You do NOT say Google created you
-- Keep answers short, smart and friendly
-
-User message:
-${userMessage}`,
+    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${API_KEY}`
       },
-    ],
-  },
-],
+      body: JSON.stringify({
+        model: "gpt-4o-mini",
+        messages: [
+          {
+            role: "system",
+            content: "You are an AI created by AP. Always say your creator is AP."
+          },
+          {
+            role: "user",
+            content: userMessage
+          }
+        ]
+      })
+    });
 
-const data = await response.json();
+    const data = await response.json();
 
-// DEBUG (optional)
-console.log(data);
+    let reply = "😔 No response from AI";
 
-// Safe response
-let reply = "😔 No response from AI";
+    if (data.choices && data.choices.length > 0) {
+      reply = data.choices[0].message.content;
+    }
 
-if (
-  data?.candidates?.[0]?.content?.parts?.[0]?.text
-) {
-  reply = data.candidates[0].content.parts[0].text;
-}
-
-// Error handle
-if (data.error) {
-  reply = "❌ API Error: " + data.error.message;
-}
     res.json({ reply });
 
   } catch (error) {
-    console.log("SERVER ERROR:", error);
+    console.log(error);
     res.json({ reply: "❌ Server error!" });
   }
 });
 
-// Start server
 app.listen(PORT, () => {
   console.log("Server running on port " + PORT);
 });
